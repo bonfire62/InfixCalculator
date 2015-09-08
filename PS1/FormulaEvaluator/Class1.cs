@@ -25,15 +25,24 @@ namespace FormulaEvaluator
             Stack<int> valueStack = new Stack<int>();
             Stack<string> operatorStack = new Stack<string>();
 
-            foreach (var i in substrings)
+            for (int i = substrings.Length - 1; i >= 0; i--)
             {
-                int k;
-                if (int.TryParse(i, out k))
+                int intPop;
+                if (int.TryParse(substrings[i], out intPop))
                 {
-                    valueStack.Push(k);
+                    if (operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/"))
+                    {
+                        valueStack.Pop();
+                    }
                 }
-                operatorStack.Push(i);
-            }           
+                
+            }
+            {
+               
+
+            }
+            
+       
             
             
         }
