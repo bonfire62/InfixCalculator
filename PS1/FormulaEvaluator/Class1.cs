@@ -19,60 +19,101 @@ namespace FormulaEvaluator
 
         public static int Evaluate(string exp, Lookup variableEvaluatorLookup)
         {
+            int finalAns = 0;
             int loopCount = 0;
             string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
             for (int i = 0; i < substrings.Length; i++)
             {
                 substrings[i] = substrings[i].Trim();
             }
-            Stack<int> valueStack = new Stack<int>();
+            Stack<double> valueStack = new Stack<double>();
             Stack<string> operatorStack = new Stack<string>();
 
             for (int i = substrings.Length - 1; i >= 0; i--)
             {
-                int intPop;
-                if (int.TryParse(substrings[i], out intPop))
+                string token = substrings[i];
+                double doubToken;
+                if (double.TryParse(substrings[i], out doubToken))
                 {
-
+                    
                     if (valueStack.Count > 0)
                     {
-                        if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/") && loopCount > 0))
+                        if (((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")) && loopCount > 0))
                         {
-                            int popVal = valueStack.Pop();
-                            string popString = operatorStack.Pop();
-
+                            double popVal = valueStack.Pop();
+                            string popOp = operatorStack.Pop();
+                            double operatedVar = MathEvaluator(popOp, doubToken, popVal);
+                            valueStack.Push(operatedVar);
+                        }
+                        else
+                        {
+                            valueStack.Push(doubToken);
                         }
                     }
                 }
+                /*if (/*regex explession here#1#))
+                {
+                    
+                }*/
+                if ((token == "+" || token == "-") && valueStack.Count >= 2)
+                {
+                    if ((operatorStack.Peek() == "+") || (operatorStack.Peek() == "-"))
+                    {
+                        double popVal = valueStack.Pop();
+                        double popVal1 = valueStack.Pop();
+                        string popOp = operatorStack.Pop();
+                        double resultVal = MathEvaluator(popOp, popVal, popVal1);
+                        valueStack.Push(resultVal);
+                        operatorStack.Push(token);
+                    }
+                }
+                if (token == "*" || token == "/")
+                {
+                    operatorStack.Push(token);
+                }
 
+                if (token == "(")
+                {
+                    operatorStack.Push(token);
+                }
+                if (token == ")")
+                {
+                    if ((operatorStack.Peek() == "+" || operatorStack.Peek() == "-") && valueStack.Count() >= 2)
+                    {
+                        double popVal = valueStack.Pop();
+                        double popVal1 = valueStack.Pop();
+                        string popOp = operatorStack.Pop();
+                        double resultVal = MathEvaluator(popOp, popVal, popVal1);
+
+                    }
+                }
+
+
+
+
+
+
+                return finalAns;
             }
-
-
 
         }
 
-        public static int OperatorEvaluator( string givenOperator, int givenNumber, int subjectNumber )
+        public static double MathEvaluator( string givenOperator, double givenNumber, double subjectNumber )
         {
-         //will return int that has been operated on give certain int or operator value   
-            if (givenOperator == "+")
+            switch (givenOperator)
             {
-                int addInt = givenNumber + subjectNumber;
-                return addInt;
-            }
-            if (givenOperator == "*")
-            {
-                int multInt = givenNumber*subjectNumber;
-                return multInt;
-            }
-            if (givenOperator == "/")
-            {
-                int divInt = givenNumber/subjectNumber;
-                return divInt;
-            }
-            if (givenOperator == "-")
-            {
-                int subInt = givenNumber - subjectNumber;
-                return subInt;
+                case "+":
+                    double addDoub = givenNumber + subjectNumber;
+                    return addDoub;
+                case "*":
+                    double multDoub = givenNumber*subjectNumber;
+                    return multDoub;
+                case "/":
+                    double divDoub = givenNumber/subjectNumber;
+                    return divDoub;
+                case "-":
+                    double subDoub = givenNumber - subjectNumber;
+                    return subDoub;
             }
             return 0;
         }
