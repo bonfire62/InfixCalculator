@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using FormulaEvaluator;
 
 
-namespace PS1_Tester
+namespace Test_Application
 {
     class Program
     {
@@ -14,11 +14,9 @@ namespace PS1_Tester
         {
            Console.WriteLine(Evaluator.Evaluate("4+3",Lookup));
            Console.Read();
-
-
         }
 
-        static int Lookup(string s)
+        static double Lookup(string s)
         {
             var value = new Dictionary<string, int>
             {

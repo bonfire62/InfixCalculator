@@ -10,10 +10,8 @@ namespace FormulaEvaluator
     {
         public delegate double Lookup(string v);
 
-        public static int Evaluate(string exp, Lookup variableEvaluatorLookup)
+        public static double Evaluate(string exp, Lookup variableEvaluatorLookup)
         {
-            var finalAns = 0;
- 
             Regex regex = new Regex("^[a-zA-Z]+[0-9]+$");
             string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
             for (var i = 0; i < substrings.Length; i++)
@@ -22,115 +20,118 @@ namespace FormulaEvaluator
             }
             Stack<double> valueStack = new Stack<double>();
             Stack<string> operatorStack = new Stack<string>();
-            try
+
+
+            for (int i = 0; i < substrings.Length; i++)
             {
-                foreach (var t in substrings)
+                double doubToken;
+                if (double.TryParse(substrings[i], out doubToken))
                 {
-                    var token = t;
-                    double doubToken;
-                    if (double.TryParse(token, out doubToken))
+                    if (valueStack.Count > 0)
                     {
-                        if (valueStack.Count > 0)
+                        if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")))
                         {
-                            if (((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/"))))
-                            {
-                                var operatedVar = MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop());
-                                valueStack.Push(operatedVar);
-                            }
-                            else
-                            {
-                                valueStack.Push(doubToken);
-                            }
+                            var operatedVar = MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop());
+                            valueStack.Push(operatedVar);
+                        }
+                        else
+                        {
+                            valueStack.Push(doubToken);
                         }
                     }
-                    else if (regex.IsMatch(t))
-                    {
-                        double num = variableEvaluatorLookup(token);
-
-                    }
-                    else if ((token == "+" || token == "-") && valueStack.Count >= 2)
-                    {
-                        if ((operatorStack.Peek() == "+") || (operatorStack.Peek() == "-"))
-                        {
-                            var popVal = valueStack.Pop();
-                            var popVal1 = valueStack.Pop();
-                            var popOp = operatorStack.Pop();
-                            var resultVal = MathEvaluator(popOp, popVal, popVal1);
-                            valueStack.Push(resultVal);
-                            operatorStack.Push(token);
-                        }
-                    }
-                    if (token == "*" || token == "/")
-                    {
-                        operatorStack.Push(token);
-                    }
-
-                    if (token == "(")
-                    {
-                        operatorStack.Push(token);
-                    }
-                    if (token == ")")
-                    {
-                        if ((operatorStack.Peek() == "+" || operatorStack.Peek() == "-") && valueStack.Count() >= 2)
-                        {
-                            var popVal = valueStack.Pop();
-                            var popVal1 = valueStack.Pop();
-                            var popOp = operatorStack.Pop();
-                            var resultVal = MathEvaluator(popOp, popVal, popVal1);
-                            valueStack.Push(resultVal);
-                            if (operatorStack.Peek() == "(")
-                            {
-                                operatorStack.Pop();
-                            }
-                        }
-                        if (((operatorStack.Peek() == "*" || operatorStack.Peek() == "/") && valueStack.Count() >= 2))
-                        {
-                            var popVal = valueStack.Pop();
-                            var popVal1 = valueStack.Pop();
-                            var popOp = operatorStack.Pop();
-                            var resultVal = MathEvaluator(popOp, popVal, popVal1);
-                            valueStack.Push(resultVal);
-                        }
-                    }
-
-                    
-                    
-
-
                 }
-                if (!operatorStack.Any())
+                else if (regex.IsMatch(substrings[i]))
                 {
-                    finalAns = Convert.ToInt32(valueStack.Pop());  
+                    doubToken = variableEvaluatorLookup(substrings[i]);
+                    if (operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/"))
+                    {
+                        valueStack.Push(MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop()));
+                    }
+                    else
+                    {
+                        valueStack.Push(doubToken);
+                    }
                 }
-                if (operatorStack.Any())
+                else if (((substrings[i].Equals("+") || substrings[i].Equals("-")) && operatorStack.Any()))
                 {
-                    if (operatorStack.Peek() == "+" || operatorStack.Peek() == "-")
+                    if ((operatorStack.Peek() == "+") || (operatorStack.Peek() == "-"))
+                    {
+                        if (valueStack.Count < 2)
+                        {
+                            throw new ArgumentException("Invalid Syntax");
+                        }
+                        var popVal = valueStack.Pop();
+                        var popVal1 = valueStack.Pop();
+                        var popOp = operatorStack.Pop();
+                        var resultVal = MathEvaluator(popOp, popVal, popVal1);
+                        valueStack.Push(resultVal);
+                        operatorStack.Push(substrings[i]);
+                    }
+                    else
+                    {
+                        operatorStack.Push(substrings[i]);
+                    }
+                }
+                else if (substrings[i].Equals("*") || substrings[i].Equals("/"))
+                {
+                    operatorStack.Push(substrings[i]);
+                }
+
+                else if (substrings[i].Equals("("))
+                {
+                    operatorStack.Push(substrings[i]);
+                }
+                else if (substrings[i].Equals(")"))
+                {
+                    if ((operatorStack.Peek() == "+" || operatorStack.Peek() == "-"))
                     {
                         var popVal = valueStack.Pop();
                         var popVal1 = valueStack.Pop();
                         var popOp = operatorStack.Pop();
                         var resultVal = MathEvaluator(popOp, popVal, popVal1);
-                        finalAns = Convert.ToInt32(resultVal);
+                        valueStack.Push(resultVal);
+                        if (operatorStack.Peek() == "(")
+                        {
+                            operatorStack.Pop();
+                        }
+                        else
+                        {
+                            throw new ArgumentException("Invalid Syntax");
+                        }
+                    }
+                    else if (((operatorStack.Peek() == "*" || operatorStack.Peek() == "/") && valueStack.Count() >= 2))
+                    {
+                        var popVal = valueStack.Pop();
+                        var popVal1 = valueStack.Pop();
+                        var popOp = operatorStack.Pop();
+                        var resultVal = MathEvaluator(popOp, popVal, popVal1);
+                        valueStack.Push(resultVal);
                     }
                 }
-                
-                //if (!operatorStack.Any())
-                //{
-                //    if (valueStack.Count == 1)
-                //    {
-                //        finalAns = Convert.ToInt32(valueStack.Pop());
-
-                //    }
-                //}
-                
-            }   
-            catch
-            {
             }
-            return finalAns;
+
+            if (operatorStack.Count == 0 && valueStack.Count == 1)
+            {
+                return valueStack.Pop();
+            }
+            else if (operatorStack.Count == 1 && valueStack.Count == 2)
+            {
+                if (operatorStack.Peek() == "+" || operatorStack.Peek() == "-")
+                {
+                    var popVal = valueStack.Pop();
+                    var popVal1 = valueStack.Pop();
+                    var popOp = operatorStack.Pop();
+                    var resultVal = MathEvaluator(popOp, popVal, popVal1);
+                    return resultVal;
+                }
+            }
+
         }
 
-       
+
+
+
+
 
         public static double MathEvaluator(string givenOperator, double givenNumber, double subjectNumber)
         {
