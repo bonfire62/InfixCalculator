@@ -15,18 +15,19 @@ namespace FormulaEvaluator
         /// then preforms an operation algorithm that performs the operations in the correct order (order of operation).
         /// </summary>
         /// <param name="exp"></param>
-        /// <param name="variableEvaluatorLookup"></param>
+        /// <param name="varLookup"></param>
         /// <returns>double</returns>
-        public static double Evaluate(string exp, Lookup variableEvaluatorLookup)
+        public static double Evaluate(string exp, Lookup varLookup)
         {
-            Regex regex = new Regex("^[a-zA-Z]+[0-9]+$");
+            Regex regex = new Regex("^[a-zA-Z]+$");
             
             
             Stack<double> valueStack = new Stack<double>();
             Stack<string> operatorStack = new Stack<string>();
             string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+    
             /// Start of main for loop that iterates over array of split strings
-            for (int i = 0; i < substrings.Length; i++)
+            for (var i = 0; i < substrings.Length; i++)
             {
                 substrings[i] = substrings[i].Trim();
                 double doubToken;
@@ -34,20 +35,23 @@ namespace FormulaEvaluator
                 if (double.TryParse(substrings[i], out doubToken))
                 {
                     /// checks if the valuestack is empty
-                    if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")) && valueStack.Any())
+                    if (operatorStack.Any())
+                    {
+                        if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")) && valueStack.Any())
                         {
                             var operatedVar = MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop());
                             valueStack.Push(operatedVar);
-                        }
-                        else
-                        {
-                            valueStack.Push(doubToken);
-                        }
-                    
+                        
+                    }
+                    }
+                    else
+                    {
+                        valueStack.Push(doubToken);
+                    }
                 }
                 else if (regex.IsMatch(substrings[i]))
                 {
-                    doubToken = variableEvaluatorLookup(substrings[i]);
+                    doubToken = varLookup(substrings[i]);
                     if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")) && valueStack.Any())
                     {
                         valueStack.Push(MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop()));
@@ -57,9 +61,10 @@ namespace FormulaEvaluator
                         valueStack.Push(doubToken);
                     }
                 }
-                else if (((substrings[i].Equals("+") || substrings[i].Equals("-")) && operatorStack.Any()))
+                else if ((substrings[i].Equals("+") || substrings[i].Equals("-")))
                 {
-                    if ((operatorStack.Peek() == "+") || (operatorStack.Peek() == "-"))
+                    
+                    if (operatorStack.Any() &&( (operatorStack.Peek() == "+") || (operatorStack.Peek() == "-")))
                     {
                         if (valueStack.Count < 2)
                         {

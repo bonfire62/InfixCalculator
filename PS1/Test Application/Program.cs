@@ -15,7 +15,7 @@ namespace Test_Application
     {
         static void Main(string[] args)
         {
-           Console.WriteLine(Evaluator.Evaluate("5/3",Lookup));
+           Console.WriteLine(Evaluator.Evaluate("6/3 + a",Lookup));
            Console.Read();
         }
 
@@ -24,7 +24,8 @@ namespace Test_Application
             var value = new Dictionary<string, int>
             {
                 {"X", 4},
-                {"Z", 6}
+                {"Z", 6},
+                {"a",1 }
             };
             if (!value.ContainsKey(s)) throw new ArgumentException("Variable not found");
             return value[s];
