@@ -10,26 +10,31 @@ namespace FormulaEvaluator
     {
         public delegate double Lookup(string v);
 
+        /// <summary>
+        /// This class is the main class that evaluates a function (given as a string), and returns a double number as the result. It uses two stacks, sorts the string into these stacks, 
+        /// then preforms an operation algorithm that performs the operations in the correct order (order of operation).
+        /// </summary>
+        /// <param name="exp"></param>
+        /// <param name="variableEvaluatorLookup"></param>
+        /// <returns>double</returns>
         public static double Evaluate(string exp, Lookup variableEvaluatorLookup)
         {
             Regex regex = new Regex("^[a-zA-Z]+[0-9]+$");
-            string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
-            for (var i = 0; i < substrings.Length; i++)
-            {
-                substrings[i] = substrings[i].Trim();
-            }
+            
+            
             Stack<double> valueStack = new Stack<double>();
             Stack<string> operatorStack = new Stack<string>();
-
-
+            string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+            /// Start of main for loop that iterates over array of split strings
             for (int i = 0; i < substrings.Length; i++)
             {
+                substrings[i] = substrings[i].Trim();
                 double doubToken;
+                /// if string is a number
                 if (double.TryParse(substrings[i], out doubToken))
                 {
-                    if (valueStack.Count > 0)
-                    {
-                        if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")))
+                    /// checks if the valuestack is empty
+                    if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")) && valueStack.Any())
                         {
                             var operatedVar = MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop());
                             valueStack.Push(operatedVar);
@@ -38,12 +43,12 @@ namespace FormulaEvaluator
                         {
                             valueStack.Push(doubToken);
                         }
-                    }
+                    
                 }
                 else if (regex.IsMatch(substrings[i]))
                 {
                     doubToken = variableEvaluatorLookup(substrings[i]);
-                    if (operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/"))
+                    if ((operatorStack.Peek() == ("*") || operatorStack.Peek() == ("/")) && valueStack.Any())
                     {
                         valueStack.Push(MathEvaluator(operatorStack.Pop(), doubToken, valueStack.Pop()));
                     }
@@ -116,6 +121,7 @@ namespace FormulaEvaluator
             }
             else if (operatorStack.Count == 1 && valueStack.Count == 2)
             {
+
                 if (operatorStack.Peek() == "+" || operatorStack.Peek() == "-")
                 {
                     var popVal = valueStack.Pop();
@@ -124,8 +130,18 @@ namespace FormulaEvaluator
                     var resultVal = MathEvaluator(popOp, popVal, popVal1);
                     return resultVal;
                 }
+               
             }
 
+            else if (operatorStack.Count > 0 && valueStack.Count > 0)
+            {
+                throw new ArgumentException("Invaild Syntax");
+            }
+            else
+            {
+                throw new ArgumentException("Invalid Syntax");
+            }
+            return 1;
         }
 
 
@@ -133,6 +149,13 @@ namespace FormulaEvaluator
 
 
 
+        /// <summary>
+        /// MathEvaluator method takes the operator, and operateson the two numbers passed to it. It is used for encapsulation and readability.
+        /// </summary>
+        /// <param name="givenOperator"></param>
+        /// <param name="givenNumber"></param>
+        /// <param name="subjectNumber"></param>
+        /// <returns></returns>
         public static double MathEvaluator(string givenOperator, double givenNumber, double subjectNumber)
         {
             switch (givenOperator)

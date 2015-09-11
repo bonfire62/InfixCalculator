@@ -8,11 +8,14 @@ using FormulaEvaluator;
 
 namespace Test_Application
 {
-    class Program
+    /// <summary>
+    /// This Program is the tester program
+    /// </summary>
+    class T
     {
         static void Main(string[] args)
         {
-           Console.WriteLine(Evaluator.Evaluate("4+3",Lookup));
+           Console.WriteLine(Evaluator.Evaluate("5/3",Lookup));
            Console.Read();
         }
 
